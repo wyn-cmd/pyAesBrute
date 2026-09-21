@@ -1,22 +1,46 @@
-import sys,pyAesCrypt,time
-s=time.time()
-b=64*64
-dic=sys.argv[1]
-fi=sys.argv[2]
-out=sys.argv[3]
-pas=open(dic,'rb').readlines()
-n=0
-print('***brute forcing file...***')
-total=len(pas)
-while True:
-    passf=pas[n].strip('\n'.encode('utf-8'))
+import sys
+import time
+import pyAesCrypt
+
+def main():
+    if len(sys.argv) < 4:
+        print("Usage: python pybrute.py <dictionary> <encrypted_file> <output_file>")
+        sys.exit(1)
+
+    dict_path = sys.argv[1]
+    file_path = sys.argv[2]
+    out_path = sys.argv[3]
+    buffer_size = 4096  # 64 * 64
+
+    start_time = time.time()
+    
     try:
-        pyAesCrypt.decryptFile(fi,out,passf.decode('utf-8'),b)
-        print('  ***file decrypted***')
-        e=time.time()
-        print('password: {%s}'%passf.decode('utf-8'))
-        print('time taken:',e-s)
-        print(f'{n/(e-s)} passwords per second')
-        sys.exit()
-    except Exception:
-        n+=1
+        with open(dict_path, 'rb') as f:
+            passwords = f.readlines()
+    except FileNotFoundError:
+        print(f"Error: Dictionary file '{dict_path}' not found.")
+        sys.exit(1)
+
+    print("***brute forcing file...***")
+    
+    for n, password in enumerate(passwords):
+        passf = password.rstrip(b'\r\n')
+        try:
+            pyAesCrypt.decryptFile(file_path, out_path, passf.decode('utf-8', errors='ignore'), buffer_size)
+            elapsed = time.time() - start_time
+            print("  ***file decrypted***")
+            print(f"password: {{{passf.decode('utf-8', errors='ignore')}}}")
+            print(f"time taken: {elapsed}")
+            if elapsed > 0:
+                print(f"{n / elapsed} passwords per second")
+            else:
+                print("Completed instantly")
+            return
+        except Exception:
+            continue
+
+    print("Password not found in dictionary.")
+    sys.exit(1)
+
+if __name__ == '__main__':
+    main()
