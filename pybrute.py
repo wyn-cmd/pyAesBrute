@@ -10,10 +10,8 @@ def main():
     dict_path = sys.argv[1]
     file_path = sys.argv[2]
     out_path = sys.argv[3]
-    buffer_size = 4096  # 64 * 64
+    buffer_size = 4096
 
-    start_time = time.time()
-    
     try:
         with open(dict_path, 'rb') as f:
             passwords = f.readlines()
@@ -22,15 +20,19 @@ def main():
         sys.exit(1)
 
     print("***brute forcing file...***")
+    start_time = time.time()
     
     for n, password in enumerate(passwords):
         passf = password.rstrip(b'\r\n')
         try:
-            pyAesCrypt.decryptFile(file_path, out_path, passf.decode('utf-8', errors='ignore'), buffer_size)
+            password_str = passf.decode('utf-8', errors='ignore')
+            pyAesCrypt.decryptFile(file_path, out_path, password_str, buffer_size)
+            
             elapsed = time.time() - start_time
             print("  ***file decrypted***")
-            print(f"password: {{{passf.decode('utf-8', errors='ignore')}}}")
+            print(f"password: {{{password_str}}}")
             print(f"time taken: {elapsed}")
+            
             if elapsed > 0:
                 print(f"{n / elapsed} passwords per second")
             else:
