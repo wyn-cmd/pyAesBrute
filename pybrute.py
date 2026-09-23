@@ -1,3 +1,5 @@
+# simple aes decryption brute forcer
+
 import sys
 import time
 import pyAesCrypt
@@ -15,8 +17,8 @@ def main():
     try:
         with open(dict_path, 'rb') as f:
             passwords = f.readlines()
-    except FileNotFoundError:
-        print(f"Error: Dictionary file '{dict_path}' not found.")
+    except OSError as e:
+        print(f"Error: Could not read dictionary file '{dict_path}': {e}")
         sys.exit(1)
 
     print("***brute forcing file...***")
