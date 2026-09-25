@@ -4,6 +4,15 @@ import sys
 import time
 import pyAesCrypt
 
+# helper function to safely load dictionary file lines
+def load_dictionary(dict_path):
+    try:
+        with open(dict_path, 'rb') as f:
+            return f.readlines()
+    except OSError as e:
+        print(f"Error: Could not read dictionary file '{dict_path}': {e}")
+        sys.exit(1)
+
 def main():
     if len(sys.argv) < 4:
         print("Usage: python pybrute.py <dictionary> <encrypted_file> <output_file>")
@@ -14,12 +23,7 @@ def main():
     out_path = sys.argv[3]
     buffer_size = 64 * 1024
 
-    try:
-        with open(dict_path, 'rb') as f:
-            passwords = f.readlines()
-    except OSError as e:
-        print(f"Error: Could not read dictionary file '{dict_path}': {e}")
-        sys.exit(1)
+    passwords = load_dictionary(dict_path)
 
     print("***brute forcing file...***")
     start_time = time.time()
