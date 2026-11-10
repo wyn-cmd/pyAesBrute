@@ -4,11 +4,12 @@ import sys
 import time
 import pyAesCrypt
 
-# helper function to safely load dictionary file lines
+# helper to yield password lines from a dictionary file
 def load_dictionary(dict_path):
     try:
         with open(dict_path, 'rb') as f:
-            return f.readlines()
+            for line in f:
+                yield line
     except OSError as e:
         print(f"Error: Could not read dictionary file '{dict_path}': {e}")
         sys.exit(1)
@@ -23,20 +24,19 @@ def main():
     out_path = sys.argv[3]
     buffer_size = 64 * 1024
 
-    passwords = load_dictionary(dict_path)
-
     print("***brute forcing file...***")
     start_time = time.time()
     
-    for n, password in enumerate(passwords):
-        passf = password.rstrip(b'\r\n')
+    # iterate through passwords without loading the entire file into memory
+    for n, line in enumerate(load_dictionary(dict_path), 1):
+        password = line.rstrip(b'\r\n').decode('utf-8', errors='ignore')
+        
         try:
-            password_str = passf.decode('utf-8', errors='ignore')
-            pyAesCrypt.decryptFile(file_path, out_path, password_str, buffer_size)
+            pyAesCrypt.decryptFile(file_path, out_path, password, buffer_size)
             
             elapsed = time.time() - start_time
             print("  ***file decrypted***")
-            print(f"password: {{{password_str}}}")
+            print(f"password: {{{password}}}")
             print(f"time taken: {elapsed:.2f}s")
             
             if elapsed > 0:
@@ -44,11 +44,11 @@ def main():
             else:
                 print("Completed instantly")
             return
+            
         except ValueError:
-            # pyAesCrypt raises ValueError on incorrect password
+            # pyAesCrypt raises ValueError for incorrect passwords
             continue
         except Exception as e:
-            # catch other unexpected issues like missing files during decrypt
             print(f"Error during decryption: {e}")
             sys.exit(1)
 
